@@ -1,8 +1,26 @@
 import { defineComponent } from "vue";
+import { is12hFormat } from "@/units";
 import { CURRENCY } from "../types/evcc";
 
+const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
+	AUD: "$",
+	BGN: "лв",
+	BRL: "R$",
+	CAD: "$",
+	CHF: "Fr.",
+	CNY: "¥",
+	EUR: "€",
+	GBP: "£",
+	ILS: "₪",
+	NZD: "$",
+	PLN: "zł",
+	USD: "$",
+	DKK: "kr",
+	SEK: "kr",
+};
+
 // list of currencies where energy price should be displayed in subunits (factor 100)
-const ENERGY_PRICE_IN_SUBUNIT = {
+const ENERGY_PRICE_IN_SUBUNIT: Record<CURRENCY, string> = {
 	AUD: "c", // Australian cent
 	BGN: "st", // Bulgarian stotinka
 	BRL: "¢", // Brazilian centavo
@@ -14,8 +32,9 @@ const ENERGY_PRICE_IN_SUBUNIT = {
 	ILS: "ag", // Israeli agora
 	NZD: "c", // New Zealand cent
 	PLN: "gr", // Polish grosz
-	USD: "¢", // US cent,
-	DKK: "Ø", // Danish øre
+	USD: "¢", // US cent
+	DKK: "øre", // Danish øre
+	SEK: "öre", // Swedish öre
 };
 
 export enum POWER_UNIT {
@@ -96,13 +115,13 @@ export default defineComponent({
 				maximumFractionDigits: 0,
 			}).format(value);
 		},
-		fmtCo2Short(gramms: number) {
+		fmtCo2Short(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} g`;
 		},
-		fmtCo2Medium(gramms: number) {
+		fmtCo2Medium(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} g/kWh`;
 		},
-		fmtCo2Long(gramms: number) {
+		fmtCo2Long(gramms = 0) {
 			return `${this.fmtNumber(gramms, 0)} gCO₂e/kWh`;
 		},
 		fmtNumberToLocale(val: number, pad = 0) {
@@ -198,6 +217,7 @@ export default defineComponent({
 			if (locale === "de") return date.getHours();
 			return new Intl.DateTimeFormat(locale, {
 				hour: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		weekdayShort(date: Date) {
@@ -210,6 +230,7 @@ export default defineComponent({
 			const hour = new Intl.DateTimeFormat(this.$i18n?.locale, {
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 
 			return `${weekday} ${hour}`.trim();
@@ -218,6 +239,7 @@ export default defineComponent({
 			return new Intl.DateTimeFormat(this.$i18n?.locale, {
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		fmtFullDateTime(date: Date, short: boolean) {
@@ -227,6 +249,7 @@ export default defineComponent({
 				day: "numeric",
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		fmtWeekdayTime(date: Date) {
@@ -234,6 +257,7 @@ export default defineComponent({
 				weekday: "short",
 				hour: "numeric",
 				minute: "numeric",
+				hour12: is12hFormat(),
 			}).format(date);
 		},
 		fmtMonthYear(date: Date) {
@@ -277,8 +301,7 @@ export default defineComponent({
 			return withSymbol ? result : result.replace(currency, "").trim();
 		},
 		fmtCurrencySymbol(currency = CURRENCY.EUR) {
-			const symbols = { EUR: "€", USD: "$", DKK: "dkr." };
-			return symbols[currency] || currency;
+			return CURRENCY_SYMBOLS[currency] || currency;
 		},
 		fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
 			let value = amout;
